@@ -14,22 +14,58 @@ class ShoppingList(db.Model):
 
     @classmethod
     def create(cls, user_id, name):
-        s_list = cls(user_id=user_id, name=name)
-        db.session.add(s_list)
-        db.session.commit()
-        return s_list
+        """建立一本新的購物清單"""
+        try:
+            s_list = cls(user_id=user_id, name=name)
+            db.session.add(s_list)
+            db.session.commit()
+            return s_list
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating shopping list: {e}")
+            return None
 
     @classmethod
-    def get_by_id(cls, id):
-        return cls.query.get(id)
+    def get_by_id(cls, list_id):
+        """利用 ID 取得購物清單"""
+        try:
+            return cls.query.get(list_id)
+        except Exception as e:
+            print(f"Error getting shopping list {list_id}: {e}")
+            return None
 
     @classmethod
     def get_by_user_id(cls, user_id):
-        return cls.query.filter_by(user_id=user_id).all()
+        """取得某名使用者的所有購物清單"""
+        try:
+            return cls.query.filter_by(user_id=user_id).all()
+        except Exception as e:
+            print(f"Error getting shopping lists for user {user_id}: {e}")
+            return []
+
+    def update(self, **kwargs):
+        """更新清單屬性 (例如：清單名稱、是否結束)"""
+        try:
+            for key, value in kwargs.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error updating shopping list {self.id}: {e}")
+            return False
 
     def delete(self):
-        db.session.delete(self)
-        db.session.commit()
+        """刪除該本購物清單與其關聯物品"""
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error deleting shopping list {self.id}: {e}")
+            return False
 
 class ShoppingItem(db.Model):
     __tablename__ = 'shopping_items'
@@ -43,7 +79,37 @@ class ShoppingItem(db.Model):
 
     @classmethod
     def create(cls, list_id, name, quantity, estimated_cost=0.0):
-        item = cls(list_id=list_id, name=name, quantity=quantity, estimated_cost=estimated_cost)
-        db.session.add(item)
-        db.session.commit()
-        return item
+        """新增清單內商品"""
+        try:
+            item = cls(list_id=list_id, name=name, quantity=quantity, estimated_cost=estimated_cost)
+            db.session.add(item)
+            db.session.commit()
+            return item
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating shopping list item: {e}")
+            return None
+
+    def update(self, **kwargs):
+        """更新商品資料 (例如：勾選購買與否)"""
+        try:
+            for key, value in kwargs.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error updating shopping list item {self.id}: {e}")
+            return False
+
+    def delete(self):
+        """由清單中移除此商品"""
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error deleting item {self.id}: {e}")
+            return False

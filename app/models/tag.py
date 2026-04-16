@@ -14,23 +14,62 @@ class Tag(db.Model):
 
     @classmethod
     def create(cls, name):
-        tag = cls(name=name)
-        db.session.add(tag)
-        db.session.commit()
-        return tag
+        """新增標籤"""
+        try:
+            tag = cls(name=name)
+            db.session.add(tag)
+            db.session.commit()
+            return tag
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating tag: {e}")
+            return None
 
     @classmethod
     def get_all(cls):
-        return cls.query.all()
+        """取得所有標籤"""
+        try:
+            return cls.query.all()
+        except Exception as e:
+            print(f"Error getting tags: {e}")
+            return []
 
     @classmethod
     def get_by_id(cls, tag_id):
-        return cls.query.get(tag_id)
+        """利用 ID 取得標籤"""
+        try:
+            return cls.query.get(tag_id)
+        except Exception as e:
+            print(f"Error getting tag {tag_id}: {e}")
+            return None
 
     @classmethod
     def get_by_name(cls, name):
-        return cls.query.filter_by(name=name).first()
+        """利用名稱取得標籤"""
+        try:
+            return cls.query.filter_by(name=name).first()
+        except Exception as e:
+            print(f"Error finding tag {name}: {e}")
+            return None
+
+    def update(self, name):
+        """更新標籤名稱"""
+        try:
+            self.name = name
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error updating tag {self.id}: {e}")
+            return False
 
     def delete(self):
-        db.session.delete(self)
-        db.session.commit()
+        """刪除標籤"""
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error deleting tag {self.id}: {e}")
+            return False

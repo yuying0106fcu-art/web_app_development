@@ -19,27 +19,58 @@ class Recipe(db.Model):
 
     @classmethod
     def create(cls, user_id, title, instructions, description=None, is_public=False):
-        recipe = cls(user_id=user_id, title=title, instructions=instructions, description=description, is_public=is_public)
-        db.session.add(recipe)
-        db.session.commit()
-        return recipe
+        """新增一筆食譜"""
+        try:
+            recipe = cls(user_id=user_id, title=title, instructions=instructions, description=description, is_public=is_public)
+            db.session.add(recipe)
+            db.session.commit()
+            return recipe
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating recipe: {e}")
+            return None
 
     @classmethod
     def get_all(cls):
-        return cls.query.all()
+        """取得所有食譜"""
+        try:
+            return cls.query.all()
+        except Exception as e:
+            print(f"Error getting recipes: {e}")
+            return []
 
     @classmethod
-    def get_by_id(cls, id):
-        return cls.query.get(id)
+    def get_by_id(cls, recipe_id):
+        """取得單筆食譜"""
+        try:
+            return cls.query.get(recipe_id)
+        except Exception as e:
+            print(f"Error getting recipe {recipe_id}: {e}")
+            return None
 
     def update(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        db.session.commit()
+        """更新食譜資料"""
+        try:
+            for key, value in kwargs.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error updating recipe {self.id}: {e}")
+            return False
 
     def delete(self):
-        db.session.delete(self)
-        db.session.commit()
+        """刪除食譜"""
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error deleting recipe {self.id}: {e}")
+            return False
 
 class RecipeIngredient(db.Model):
     __tablename__ = 'recipe_ingredients'
@@ -51,7 +82,24 @@ class RecipeIngredient(db.Model):
 
     @classmethod
     def create(cls, recipe_id, name, quantity):
-        ingredient = cls(recipe_id=recipe_id, name=name, quantity=quantity)
-        db.session.add(ingredient)
-        db.session.commit()
-        return ingredient
+        """新增一個食譜食材"""
+        try:
+            ingredient = cls(recipe_id=recipe_id, name=name, quantity=quantity)
+            db.session.add(ingredient)
+            db.session.commit()
+            return ingredient
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating ingredient: {e}")
+            return None
+
+    def delete(self):
+        """刪除該食材"""
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error deleting ingredient {self.id}: {e}")
+            return False
